@@ -3,7 +3,7 @@ package edu.neu.coe.info6205.symbolTable;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public interface BstDetail<Key extends Comparable<Key>, Value> extends BST<Key, Value> {
+interface BstDetail<Key extends Comparable<Key>, Value> extends BST<Key, Value> {
 
     Boolean contains(Key key);
 

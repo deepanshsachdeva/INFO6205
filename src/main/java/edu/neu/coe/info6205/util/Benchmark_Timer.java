@@ -4,6 +4,9 @@
 
 package edu.neu.coe.info6205.util;
 
+import edu.neu.coe.info6205.sort.simple.InsertionSort;
+
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -50,7 +53,7 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
      */
     @Override
     public double runFromSupplier(Supplier<T> supplier, int m) {
-        logger.info("Begin run: " + description + " with " + formatWhole(m) + " runs");
+//        logger.info("Begin run: " + description + " with " + formatWhole(m) + " runs");
         // Warmup phase
         final Function<T, T> function = t -> {
             fRun.accept(t);
@@ -125,4 +128,79 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
     private final Consumer<T> fPost;
 
     final static LazyLogger logger = new LazyLogger(Benchmark_Timer.class);
+
+    public static void main(String[] args) {
+        Random random = new Random();
+
+        int m = 50; // This is the number of repetitions: sufficient to give a good mean value of timing
+        int n = 1000; // This is the size of the array
+
+        for (int k = 0; k < 5; k++) {
+            //Integer[] array = new Integer[n];
+
+            InsertionSort<Integer> sorter = new InsertionSort<>();
+
+            Consumer<Integer[]> consumer = arr -> sorter.sort(arr, 0, arr.length);
+
+            Benchmark_Timer<Integer[]> bm = new Benchmark_Timer<>("Benchmarking Insertion Sort with N = "+n, consumer);
+
+            int N = n;
+
+            Supplier<Integer[]> randomSupplier = () -> {
+                Integer[] array = new Integer[N];
+
+                for(int i = 0; i < N; i++)
+                    array[i] = random.nextInt();
+
+                return array;
+            };
+
+            Supplier<Integer[]> orderedSupplier = () -> {
+                Integer[] array = new Integer[N];
+
+                for(int i = 0; i < N; i++)
+                    array[i] = i;
+
+                return array;
+            };
+
+            Supplier<Integer[]> partialSupplier = () -> {
+                Integer[] array = new Integer[N];
+
+                for(int i = 0; i < N/2; i++)
+                    array[i] = i;
+
+                for(int i = N/2; i < N; i++)
+                    array[i] = random.nextInt();
+
+                return array;
+            };
+
+            Supplier<Integer[]> reverseSupplier = () -> {
+                Integer[] array = new Integer[N];
+
+                for(int i = 0; i < N; i++)
+                    array[i] = N-i;
+
+                return array;
+            };
+
+            System.out.println("-----------------------------------");
+            System.out.println("N = "+n+" & Average Time for :");
+
+            double random_avg_time = bm.runFromSupplier(randomSupplier, m);
+            System.out.println("Randomly sorted  = "+random_avg_time+" ms");
+
+            double ordered_avg_time = bm.runFromSupplier(orderedSupplier, m);
+            System.out.println("Already sorted   = "+ordered_avg_time+" ms");
+
+            double partial_avg_time = bm.runFromSupplier(partialSupplier, m);
+            System.out.println("Partially sorted = "+partial_avg_time+" ms");
+
+            double reverse_avg_time = bm.runFromSupplier(reverseSupplier, m);
+            System.out.println("Reverse sorted   = "+reverse_avg_time+ " ms");
+
+            n = n * 2;
+        }
+    }
 }
