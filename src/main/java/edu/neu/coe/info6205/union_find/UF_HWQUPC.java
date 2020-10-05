@@ -196,7 +196,7 @@ public class UF_HWQUPC implements UF {
     }
 
     public static void main(String[] args){
-        int[] sizes = {5000, 100000, 150000, 180000, 200000};
+        int[] sizes = {100000, 200000, 500000, 800000, 1000000};
         Random r = new Random();
         int m = 0;
 
