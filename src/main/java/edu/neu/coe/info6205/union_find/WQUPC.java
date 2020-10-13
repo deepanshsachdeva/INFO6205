@@ -3,6 +3,12 @@
  */
 package edu.neu.coe.info6205.union_find;
 
+import edu.neu.coe.info6205.util.Benchmark_Timer;
+
+import java.util.Random;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 /**
  * Weighted Quick Union with Path Compression
  */
@@ -54,13 +60,21 @@ public class WQUPC {
     public int find(int p) {
         validate(p);
         int root = p;
-        while (root != parent[root]) {
+
+        /* Two Pass */
+//        while (root != parent[root]) {
+//            root = parent[root];
+//        }
+//        while (p != root) {
+//            int newp = parent[p];
+//            parent[p] = root;
+//            p = newp;
+//        }
+
+        /* Grandparent */
+        while(root != parent[root]){
+            parent[root] = parent[parent[root]];
             root = parent[root];
-        }
-        while (p != root) {
-            int newp = parent[p];
-            parent[p] = root;
-            p = newp;
         }
         return root;
     }
@@ -111,4 +125,56 @@ public class WQUPC {
         count--;
     }
 
+    public static void main(String[] args) {
+        int[] sizes = {100000, 200000, 400000, 800000, 1000000};
+
+        Random r = new Random();
+
+        System.out.printf("%-10s %-10s %-10s\n", "N", "#1", "#2");
+        for (int k = 0; k < sizes.length; k++) {
+            int N = sizes[k];
+
+            /**
+             * Benchmarking #1 : HWQU without PC
+             */
+            Supplier<UF_HWQUPC> hwqu_supplier = () -> {
+                return new UF_HWQUPC(N, false);
+            };
+
+            Consumer<UF_HWQUPC> hwqu_consumer = uf -> {
+                while (uf.components() != 1) {
+                    int i = r.nextInt(N);
+                    int j = r.nextInt(N);
+                    uf.connect(i, j);
+                }
+            };
+
+            Benchmark_Timer<UF_HWQUPC> bm1 = new Benchmark_Timer<>("Benchmarking UF_HWQU with N = "+N, hwqu_consumer);
+
+            /**
+             * Benchmarking #2 : WQUPC with PC using grandparent fix
+             */
+            Supplier<WQUPC> wqupc_supplier = () -> {
+                return new WQUPC(N);
+            };
+
+            Consumer<WQUPC> wqupc_consumer = uf -> {
+                while (uf.count() != 1) {
+                    int i = r.nextInt(N);
+                    int j = r.nextInt(N);
+                    uf.union(i, j);
+                }
+            };
+
+            Benchmark_Timer<WQUPC> bm2 = new Benchmark_Timer<>("Benchmarking WQUPC with N = "+N, wqupc_consumer);
+
+            /**
+             * Comparing Benchmark #1 & #2
+             */
+            double t1 = bm1.runFromSupplier(hwqu_supplier,50);
+            double t2 = bm2.runFromSupplier(wqupc_supplier,50);
+
+            System.out.printf("%-10s %-10.2f %-10.2f\n", N, t1, t2);
+        }
+    }
 }
