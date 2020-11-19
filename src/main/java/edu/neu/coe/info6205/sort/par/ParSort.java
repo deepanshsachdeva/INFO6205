@@ -11,7 +11,7 @@ import java.util.concurrent.ForkJoinPool;
 class ParSort {
 
     public static int cutoff = 1000;
-    public static int threads;
+//    public static int threads;
 
     public static void sort(int[] array, int from, int to) {
         if (to - from < cutoff) Arrays.sort(array, from, to);
@@ -52,16 +52,18 @@ class ParSort {
     }
 
     private static CompletableFuture<int[]> parsort(int[] array, int from, int to) {
-        ForkJoinPool pool = new ForkJoinPool(threads);
 
         return CompletableFuture.supplyAsync(
                 () -> {
                     int[] result = new int[to - from];
                     // TO IMPLEMENT
-                    System.arraycopy(array, from, result, 0, result.length);
-                    sort(result, 0, to - from);
+                    sort(array, from, to);
+
+                    for(int i = from; i < (to-from); i++)
+                        result[i] = array[i];
+
                     return result;
                 }
-        ,pool);
+        );
     }
 }
